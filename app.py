@@ -10,7 +10,8 @@ from flask_sqlalchemy import SQLAlchemy
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
 
-load_dotenv()
+if os.path.exists(".env"):
+    load_dotenv()
 
 # Twilio credentials
 ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
