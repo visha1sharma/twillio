@@ -19,6 +19,9 @@ ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")
 
+print("ACCOUNT_SID",ACCOUNT_SID)
+print("AUTH_TOKEN",AUTH_TOKEN)
+print("TWILIO_NUMBER",TWILIO_NUMBER)
 if not (ACCOUNT_SID and AUTH_TOKEN and TWILIO_NUMBER):
     raise RuntimeError(
         "Missing Twilio credentials: set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_NUMBER "
