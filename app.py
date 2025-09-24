@@ -81,28 +81,41 @@ def send_sms():
 # Receive SMS endpoint
 @app.route("/receive-sms", methods=["GET","POST"])
 def receive_sms():
-    from_number = request.form.get("From")
-    to_number = request.form.get("To")
-    body = request.form.get("Body")
-
-    print(f"📩 Incoming SMS from {from_number}: {body}")
-
-    db_msg = Message(
-        sid=None,
-        from_number=from_number,
-        to_number=to_number,
-        body=body,
-        direction="inbound",
-        status="received",
-    )
-    db.session.add(db_msg)
-    db.session.commit()
-    print("✅ Saved inbound SMS to DB.")
-
-    # Auto-reply
-    resp = MessagingResponse()
-    resp.message("✅ Thanks — we received your message.")
-    return str(resp)
+    
+    payload = request.form.get("Payload") 
+    if payload: 
+        try: 
+            payload_data = json.loads(payload)
+            msg_data = payload_data.get("webhook", {}).get("request", {}).get("parameters", {})
+            from_number = msg_data.get("From")
+            to_number = msg_data.get("To")
+            body = msg_data.get("Body") or msg_data.get("SmsBody")
+        except Exception as e: 
+            print("Error parsing payload:", e) 
+            from_number =request.form.get("Form")
+            to_number =request.form.get("To")
+            body =request.form.get("Body")
+            
+            print(f"📩 Incoming SMS from {from_number}: {body}")
+            db_msg = Message( 
+                sid=None, 
+                from_number=from_number, 
+                to_number=to_number, 
+                body=body, 
+                direction="inbound", 
+                status="received", 
+                )
+            
+            db.session.add(db_msg) 
+            db.session.commit() 
+            print("✅ Saved inbound SMS to DB.")
+            
+            
+            
+            resp = MessagingResponse() 
+            resp.message("✅ Thanks — we received your message.") 
+            return str(resp)
+           
 
 # Status callback endpoint
 @app.route("/sms/status", methods=["POST"])
