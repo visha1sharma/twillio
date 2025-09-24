@@ -10,16 +10,21 @@ from flask_sqlalchemy import SQLAlchemy
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
 
-if os.path.exists(".env"):
-    load_dotenv()
 
-# Twilio credentials
+# Load local .env only if present (safe for dev)
+load_dotenv()
+
+# Twilio credentials (from Render ENV or .env locally)
 ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")
 
 if not (ACCOUNT_SID and AUTH_TOKEN and TWILIO_NUMBER):
-    raise RuntimeError("Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_NUMBER in .env")
+    raise RuntimeError(
+        "Missing Twilio credentials: set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_NUMBER "
+        "either in a .env (local) or Render Environment Variables (production)"
+    )
+
 
 client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
