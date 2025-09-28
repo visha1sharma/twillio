@@ -79,10 +79,13 @@ def send_sms():
     return jsonify({"status": "queued", "sid": message.sid}), 200
 
 # Receive SMS endpoint
-@app.route("/receive-sms", methods=["GET","POST"])
+@app.route("/receive-sms", methods=["GET", "POST"])
 def receive_sms():
-    
     payload = request.form.get("Payload") 
+    from_number = None
+    to_number = None
+    body = None
+
     if payload: 
         try: 
             payload_data = json.loads(payload)
@@ -91,31 +94,37 @@ def receive_sms():
             to_number = msg_data.get("To")
             body = msg_data.get("Body") or msg_data.get("SmsBody")
         except Exception as e: 
-            print("Error parsing payload:", e) 
-            from_number =request.form.get("Form")
-            to_number =request.form.get("To")
-            body =request.form.get("Body")
-            
-            print(f"📩 Incoming SMS from {from_number}: {body}")
-            db_msg = Message( 
-                sid=None, 
-                from_number=from_number, 
-                to_number=to_number, 
-                body=body, 
-                direction="inbound", 
-                status="received", 
-                )
-            
-            db.session.add(db_msg) 
-            db.session.commit() 
-            print("✅ Saved inbound SMS to DB.")
-            
-            
-            
-            resp = MessagingResponse() 
-            resp.message("✅ Thanks — we received your message.") 
-            return str(resp)
-           
+            print("❌ Error parsing payload:", e) 
+
+    # If parsing failed or payload wasn't present, fallback to regular form fields
+    if not from_number:
+        from_number = request.form.get("From")  # You had "Form" — typo?
+    if not to_number:
+        to_number = request.form.get("To")
+    if not body:
+        body = request.form.get("Body")
+
+    # Debug log
+    print(f"📩 Incoming SMS from {from_number}: {body}")
+
+    # Save to DB (assuming Message and db are correctly defined)
+    db_msg = Message( 
+        sid=None, 
+        from_number=from_number, 
+        to_number=to_number, 
+        body=body, 
+        direction="inbound", 
+        status="received", 
+    )
+    db.session.add(db_msg) 
+    db.session.commit() 
+    print("✅ Saved inbound SMS to DB.")
+
+    # Return TwiML response
+    resp = MessagingResponse()
+    resp.message("✅ Thanks — we received your message.")
+    return str(resp), 200, {'Content-Type': 'application/xml'}
+
 
 # Status callback endpoint
 @app.route("/sms/status", methods=["POST"])
